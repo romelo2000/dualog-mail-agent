@@ -1,0 +1,58 @@
+name: Build Windows EXE
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime + build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-build.txt
+
+      - name: Generate application icon
+        run: python scripts/generate_icon.py
+
+      - name: Build EXE with PyInstaller
+        run: >
+          pyinstaller --onefile --noconsole
+          --name DualogMailAgent
+          --icon assets/icon.ico
+          main.py
+
+      - name: Assemble release package
+        shell: pwsh
+        run: |
+          $pkg = "dist/DualogMailAgent-package"
+          New-Item -ItemType Directory -Force -Path $pkg
+          Copy-Item "dist/DualogMailAgent.exe" "$pkg/DualogMailAgent.exe"
+          Copy-Item ".env.example" "$pkg/.env.example"
+          Copy-Item "rules.yaml" "$pkg/rules.yaml"
+          Copy-Item "WINDOWS_SETUP.md" "$pkg/WINDOWS_SETUP.md"
+          Copy-Item "README.md" "$pkg/README.md"
+          Compress-Archive -Path "$pkg/*" -DestinationPath "dist/DualogMailAgent-windows.zip"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DualogMailAgent-windows
+          path: dist/DualogMailAgent-windows.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DualogMailAgent-windows.zip

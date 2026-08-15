@@ -1,12 +1,19 @@
 """Загрузка конфигурации из .env и rules.yaml."""
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent
+if getattr(sys, "frozen", False):
+    # Собранный PyInstaller .exe: .env/rules.yaml лежат рядом с exe, а не внутри
+    # временной папки распаковки (sys._MEIPASS).
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+
 load_dotenv(BASE_DIR / ".env")
 
 

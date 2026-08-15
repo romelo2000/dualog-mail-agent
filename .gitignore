@@ -3,3 +3,8 @@ state/
 logs/
 __pycache__/
 *.pyc
+dist/
+build/
+*.spec
+assets/icon_preview.png
+assets/icon.ico
