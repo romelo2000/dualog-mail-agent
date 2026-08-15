@@ -12,7 +12,7 @@ import threading
 import time
 
 from classifier import is_important
-from config import Settings
+from config import BASE_DIR, Rules, Settings
 from logger import setup_logger
 from mail_fetcher import fetch_new_mails
 from mail_forwarder import forward_mail
@@ -67,6 +67,14 @@ def run_cycle_with_watchdog(settings, logger, state):
 
 def run_single_cycle(settings: Settings, logger, state: StateStore) -> None:
     logger.info("[CYCLE] Старт цикла опроса")
+
+    # Перечитываем rules.yaml перед каждым циклом, чтобы правила можно было
+    # редактировать (Блокнотом) без перезапуска агента.
+    rules_path = BASE_DIR / "rules.yaml"
+    try:
+        settings.rules = Rules.load(rules_path)
+    except Exception as e:
+        logger.error(f"[RULES] Не удалось перечитать rules.yaml, используются старые правила: {e}")
 
     mails = fetch_new_mails(settings, logger, already_seen=state)
 
