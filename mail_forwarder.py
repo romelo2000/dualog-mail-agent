@@ -1,8 +1,10 @@
 """Пересылка важных писем на Gmail через SMTP с timeout и retry."""
 import smtplib
 import time
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email import encoders
 from logging import Logger
 
 from config import Settings
@@ -15,13 +17,28 @@ def _build_forward_message(mail: FetchedMail, from_addr: str, to_addr: str) -> M
     msg["To"] = to_addr
     msg["Subject"] = f"[Dualog forward] {mail.subject}"
 
+    attachment_note = ""
+    if mail.attachments:
+        names = ", ".join(a.filename for a in mail.attachments)
+        attachment_note = f"\nВложения: {names}\n"
+
     body_text = (
         f"Пересланное важное письмо из Dualog Mail.\n"
         f"Оригинальный отправитель: {mail.sender}\n"
         f"Оригинальная тема: {mail.subject}\n"
+        f"{attachment_note}"
         f"\n---\n\n{mail.body}"
     )
     msg.attach(MIMEText(body_text, "plain", "utf-8"))
+
+    for attachment in mail.attachments:
+        maintype, _, subtype = attachment.content_type.partition("/")
+        part = MIMEBase(maintype or "application", subtype or "octet-stream")
+        part.set_payload(attachment.content)
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", f'attachment; filename="{attachment.filename}"')
+        msg.attach(part)
+
     return msg
 
 

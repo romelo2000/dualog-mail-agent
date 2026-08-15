@@ -83,6 +83,7 @@ class Settings:
     cycle_watchdog_seconds: int
     state_file: Path
     log_file: Path
+    max_attachment_size_mb: int
 
     rules: Rules
 
@@ -103,11 +104,12 @@ class Settings:
             forward_to=_env("GMAIL_FORWARD_TO", required=True),
             poll_interval_seconds=_env_int("POLL_INTERVAL_SECONDS", 300),
             imap_timeout_seconds=_env_int("IMAP_TIMEOUT_SECONDS", 25),
-            smtp_timeout_seconds=_env_int("SMTP_TIMEOUT_SECONDS", 20),
+            smtp_timeout_seconds=_env_int("SMTP_TIMEOUT_SECONDS", 60),
             max_retries=_env_int("MAX_RETRIES", 3),
             retry_delay_seconds=_env_int("RETRY_DELAY_SECONDS", 2),
             cycle_watchdog_seconds=_env_int("CYCLE_WATCHDOG_SECONDS", 120),
             state_file=BASE_DIR / _env("STATE_FILE", "state/seen_uids.json"),
             log_file=BASE_DIR / _env("LOG_FILE", "logs/agent.log"),
+            max_attachment_size_mb=_env_int("MAX_ATTACHMENT_SIZE_MB", 10),
             rules=Rules.load(rules_path),
         )

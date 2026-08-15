@@ -4,11 +4,18 @@ import email.message
 import imaplib
 import socket
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from email.header import decode_header
 from logging import Logger
 
 from config import Settings
+
+
+@dataclass
+class Attachment:
+    filename: str
+    content: bytes
+    content_type: str
 
 
 @dataclass
@@ -18,6 +25,7 @@ class FetchedMail:
     subject: str
     body: str
     raw: bytes
+    attachments: list[Attachment] = field(default_factory=list)
 
 
 def _decode(value: str | None) -> str:
@@ -52,6 +60,42 @@ def _extract_body(msg: email.message.Message) -> str:
         )
     except Exception:
         return ""
+
+
+def _extract_attachments(msg: email.message.Message, max_size_mb: int, logger: Logger, uid: str) -> list[Attachment]:
+    attachments: list[Attachment] = []
+    if not msg.is_multipart():
+        return attachments
+
+    max_bytes = max_size_mb * 1024 * 1024
+    for part in msg.walk():
+        disp = str(part.get("Content-Disposition") or "")
+        filename = part.get_filename()
+        is_attachment = "attachment" in disp.lower() or (filename and "inline" not in disp.lower())
+        if not is_attachment or not filename:
+            continue
+
+        try:
+            payload = part.get_payload(decode=True)
+        except Exception as e:
+            logger.error(f"[IMAP] UID={uid}: не удалось декодировать вложение '{filename}': {e}")
+            continue
+
+        if not payload:
+            continue
+
+        if len(payload) > max_bytes:
+            logger.error(
+                f"[IMAP] UID={uid}: вложение '{filename}' ({len(payload) / 1024 / 1024:.1f} MB) "
+                f"превышает лимит {max_size_mb} MB, пропускаем (только это вложение, письмо всё равно пересылается)"
+            )
+            continue
+
+        filename = _decode(filename)
+        content_type = part.get_content_type() or "application/octet-stream"
+        attachments.append(Attachment(filename=filename, content=payload, content_type=content_type))
+
+    return attachments
 
 
 def fetch_new_mails(settings: Settings, logger: Logger, already_seen) -> list[FetchedMail]:
@@ -96,8 +140,14 @@ def fetch_new_mails(settings: Settings, logger: Logger, already_seen) -> list[Fe
                     sender = _decode(msg.get("From"))
                     subject = _decode(msg.get("Subject"))
                     body = _extract_body(msg)
+                    attachments = _extract_attachments(msg, settings.max_attachment_size_mb, logger, uid)
 
-                    results.append(FetchedMail(uid=uid, sender=sender, subject=subject, body=body, raw=raw))
+                    results.append(
+                        FetchedMail(
+                            uid=uid, sender=sender, subject=subject, body=body,
+                            raw=raw, attachments=attachments,
+                        )
+                    )
 
                 logger.info(f"[IMAP] Найдено новых писем: {len(results)}")
                 return results

@@ -31,6 +31,7 @@ FIELDS = [
     ("GMAIL_SMTP_APP_PASSWORD", "Gmail App Password", True, ""),
     ("GMAIL_FORWARD_TO", "Куда пересылать (Gmail)", False, ""),
     ("POLL_INTERVAL_SECONDS", "Интервал опроса, сек", False, "300"),
+    ("MAX_ATTACHMENT_SIZE_MB", "Макс. размер вложения, МБ", False, "10"),
 ]
 
 
@@ -69,12 +70,13 @@ def write_env_file(path: Path, values: dict) -> None:
         "# ---- Поведение агента ----",
         f"POLL_INTERVAL_SECONDS={values.get('POLL_INTERVAL_SECONDS', '300')}",
         "IMAP_TIMEOUT_SECONDS=25",
-        "SMTP_TIMEOUT_SECONDS=20",
+        "SMTP_TIMEOUT_SECONDS=60",
         "MAX_RETRIES=3",
         "RETRY_DELAY_SECONDS=2",
         "CYCLE_WATCHDOG_SECONDS=120",
         "STATE_FILE=state/seen_uids.json",
         "LOG_FILE=logs/agent.log",
+        f"MAX_ATTACHMENT_SIZE_MB={values.get('MAX_ATTACHMENT_SIZE_MB', '10')}",
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -84,7 +86,7 @@ class SettingsApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Dualog -> Gmail Agent — Настройки")
-        self.geometry("480x480")
+        self.geometry("480x520")
         self.resizable(False, False)
 
         existing = parse_env_file(ENV_PATH)
