@@ -70,7 +70,7 @@ def main():
     base = build_base_image()
     sizes = [(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)]
     base.save(OUT_PATH, format="ICO", sizes=sizes)
-    print(f"Иконка сохранена: {OUT_PATH}")
+    print(f"Icon saved: {OUT_PATH}")
 
 
 if __name__ == "__main__":
