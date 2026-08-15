@@ -1,5 +1,6 @@
 """IMAP-клиент для Dualog с timeout и retry. Никаких бесконечных ожиданий."""
 import email
+import email.message
 import imaplib
 import socket
 import time
