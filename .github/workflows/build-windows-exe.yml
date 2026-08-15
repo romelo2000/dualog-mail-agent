@@ -32,12 +32,19 @@ jobs:
       - name: Generate application icon
         run: python scripts/generate_icon.py
 
-      - name: Build EXE with PyInstaller
+      - name: Build agent EXE with PyInstaller
         run: >
           pyinstaller --onefile --noconsole
           --name DualogMailAgent
           --icon assets/icon.ico
           main.py
+
+      - name: Build settings GUI EXE with PyInstaller
+        run: >
+          pyinstaller --onefile --noconsole
+          --name DualogAgentSettings
+          --icon assets/icon.ico
+          config_gui.py
 
       - name: Assemble release package
         shell: pwsh
@@ -45,6 +52,7 @@ jobs:
           $pkg = "dist/DualogMailAgent-package"
           New-Item -ItemType Directory -Force -Path $pkg
           Copy-Item "dist/DualogMailAgent.exe" "$pkg/DualogMailAgent.exe"
+          Copy-Item "dist/DualogAgentSettings.exe" "$pkg/DualogAgentSettings.exe"
           Copy-Item ".env.example" "$pkg/.env.example"
           Copy-Item "rules.yaml" "$pkg/rules.yaml"
           Copy-Item "WINDOWS_SETUP.md" "$pkg/WINDOWS_SETUP.md"

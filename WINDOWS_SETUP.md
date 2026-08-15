@@ -7,10 +7,14 @@
 1. Открыть https://github.com/romelo2000/dualog-mail-agent/releases
 2. Скачать `DualogMailAgent-windows.zip` из последнего релиза, распаковать в отдельную папку
    (например `C:\DualogAgent\`).
-3. В этой папке будут: `DualogMailAgent.exe`, `.env.example`, `rules.yaml`.
-4. Переименовать `.env.example` → `.env`, открыть в блокноте, заполнить (см. раздел 5 ниже).
-5. Отредактировать `rules.yaml` под критерии важности.
-6. Запустить `DualogMailAgent.exe` двойным кликом (соберётся без консольного окна,
+3. В этой папке будут: `DualogMailAgent.exe`, `DualogAgentSettings.exe`, `.env.example`, `rules.yaml`.
+4. Запустить `DualogAgentSettings.exe` — откроется окно настроек, где нужно заполнить:
+   хост/порт/логин/пароль Dualog IMAP, Gmail-адрес и App Password, куда пересылать.
+   Нажать **Сохранить** — файл `.env` создастся/обновится автоматически.
+   Если пароль (Dualog или Gmail) поменяется в будущем — просто снова открыть
+   `DualogAgentSettings.exe`, изменить поле и сохранить, редактировать текстовый файл вручную не нужно.
+5. Отредактировать `rules.yaml` под критерии важности (обычный текстовый файл, блокнотом).
+6. Запустить `DualogMailAgent.exe` двойным кликом (работает без консольного окна,
    логи пишутся в `logs\agent.log` рядом с exe).
 7. Для автозапуска при старте Windows — см. раздел 7 ниже, только вместо
    `pythonw.exe main.py` указать путь к `DualogMailAgent.exe` напрямую (Program/script),
